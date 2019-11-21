@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "laravel/framework": "~5.7.15",
+        "illuminate/support": "^5.7|^6.0",
         "sukohi/fluent-csv": "3.*",
         "phpoffice/phpspreadsheet": "^1.10"
     },
