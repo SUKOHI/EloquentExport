@@ -5,7 +5,7 @@ A Laravel package that allows you to export data from database through Eloquent 
 
 Run the following command.
 
-    composer sukohi/eloquent-export:1.*
+    composer require sukohi/eloquent-export:1.*
     
 # Usage
 
