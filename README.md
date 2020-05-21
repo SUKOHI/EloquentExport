@@ -1,5 +1,6 @@
 # EloquentExport
 A Laravel package that allows you to export data from your database through Eloquent model.
+This package is maintained under Laravel 6.x.
 
 # Installation
 
