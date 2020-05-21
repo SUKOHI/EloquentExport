@@ -3,6 +3,7 @@
 namespace Sukohi\EloquentExport;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -23,21 +24,38 @@ class EloquentExportServiceProvider extends ServiceProvider {
 
         };
 
-        function getRowData($item, $filters) {
+        function getRowData($item, $rendering_values) {
 
             $row_data = [];
 
-            if(empty($filters)) {
+            if(empty($rendering_values)) {
 
                 $row_data = array_values($item->toArray());
 
             } else {
 
-                foreach($filters as $filter) {
+                foreach($rendering_values as $rendering_value) {
 
-                    if(is_callable($filter)) {
+                    if(is_callable($rendering_value)) {
 
-                        $row_data[] = $filter($item);
+                        $row_data[] = $rendering_value($item);
+
+                    } else if(is_string($rendering_value)) {
+
+                        $keys = explode('.', $rendering_value);
+                        $item_value = $item;
+
+                        foreach($keys as $key) {
+
+                            $item_value = $item_value[$key];
+
+                        }
+
+                        $row_data[] = $item_value;
+
+                    } else {
+
+                        $row_data[] = '';
 
                     }
 
@@ -49,20 +67,44 @@ class EloquentExportServiceProvider extends ServiceProvider {
 
         }
 
-        Collection::macro('export', function($filename = '', $filters = [], $encoding = 'UTF-8') {
+        Collection::macro('export', function($filename = '', $options = []) {
 
             $extension = getExtension($filename);
+            $render = Arr::get($options, 'render', []);
+            $prepend = Arr::get($options, 'prepend', []);
+            $append = Arr::get($options, 'append', []);
 
             if($extension === 'csv') {
 
+                $encoding = Arr::get($options, 'encoding', 'UTF-8');
                 $fluent = \FluentCsv::setEncoding($encoding);
 
-                $this->each(function($item) use($fluent, $filters) {
+                if(is_array($prepend)) {
 
-                    $row_data = getRowData($item, $filters);
+                    foreach($prepend as $prepending_row) {
+
+                        $fluent->addData($prepending_row);
+
+                    }
+
+                }
+
+                $this->each(function($item) use($fluent, $render) {
+
+                    $row_data = getRowData($item, $render);
                     $fluent->addData($row_data);
 
                 });
+
+                if(is_array($append)) {
+
+                    foreach($append as $appending_row) {
+
+                        $fluent->addData($appending_row);
+
+                    }
+
+                }
 
                 return $fluent->download($filename);
 
@@ -72,11 +114,32 @@ class EloquentExportServiceProvider extends ServiceProvider {
                 $sheet = $spreadsheet->getActiveSheet();
                 $excel_data = [];
 
-                $this->each(function($item) use(&$excel_data, $filters) {
+                if(is_array($prepend)) {
 
-                    $excel_data[] = getRowData($item, $filters);
+                    foreach($prepend as $prepending_row) {
+
+                        $excel_data[] = $prepending_row;
+
+                    }
+
+                }
+
+                $this->each(function($item) use(&$excel_data, $render) {
+
+                    $excel_data[] = getRowData($item, $render);
 
                 });
+
+                if(is_array($append)) {
+
+                    foreach($append as $appending_row) {
+
+                        $excel_data[] = $appending_row;
+
+                    }
+
+                }
+
                 $sheet->fromArray($excel_data, null, 'A1');
 
                 $callback = function() use($spreadsheet) {

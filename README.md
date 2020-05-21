@@ -1,20 +1,20 @@
 # EloquentExport
-A Laravel package that allows you to export data from database through Eloquent model.
+A Laravel package that allows you to export data from your database through Eloquent model.
 
 # Installation
 
-Run the following command.
+Execute the following command.
 
-    composer require sukohi/eloquent-export:1.*
+    composer require sukohi/eloquent-export:2.*
     
-# Usage
+Your Eloquent model already has `export()` method after installation.
 
-Your Eloquent model has `export()` method after installation.
+# Usage
 
 ## The simplest way
 
-Use `export()` method in your controller.  
-Only filename is required.
+Call `export()` in your controller.  
+Only filename required.
 
     $users = \App\User::get();
     
@@ -29,39 +29,51 @@ Only filename is required.
     
 ## Select column
 
-Downloading data will be narrowed by using `select()` method.
+Downloading data will be narrowed with `select()` method.
 
     $users = \App\User::select('id', 'name', 'email')->get();
     $users->export('test.csv);  // Only id, name and email data.
 
-## with filters
+## Options
 
-You can change data using callback(s) as follows.
+### Rendering
+
+You can change downloading data with key, dot-notation-key, null, callback(s) as follows.
 
     $users = \App\User::get();
-
-    $filters = [
-        function($user) {
-
-            return 'Sir '. $user->name;
-
-        },
-        function($user) {
-
-            return $user->created_at->format('Y.m.d');
-
-        }
+    $options = [
+        'renders' => [
+            'id', // $user->id
+            'company.name', // $user->company->name
+            null, // skipping column
+            function($user) {
+    
+                return $user->created_at->format('Y.m.d');
+    
+            }
+        ]
     ];
+    return $users->export('test.xls', $options);
 
-    return $users->export('test.xls', $filters);
+### Encoding
 
-In this case, only two column data is available.
+You can specify an encoding to convert data just when downloading csv file.
 
-# Encoding
+    $options = ['encoding' => 'sjis-win'];
+    return $users->export('test.csv', $options);
 
-You can specify an encoding to convert data only when downloading csv file.
+### Additional data
 
-    return $users->export('test.csv', [], 'sjis-win');
+    $users = \App\User::get();
+    $options = [
+        'prepend' => [
+            ['header - 1', 'header - 2', 'header - 3']
+        ],
+        'append' => [
+            ['footer - 1', 'footer - 2', 'footer - 3']
+        ]
+    ];
+    return $users->export('test.xls', $options);
 
 # License
 This package is licensed under the MIT License.
