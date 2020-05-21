@@ -46,7 +46,7 @@ You can change downloading data with key, dot-notation-key, null, callback(s) as
         'render' => [
             'id', // $user->id
             'company.name', // $user->company->name
-            null, // skipping column
+            null, // blank column
             function($user) {
     
                 return $user->created_at->format('Y.m.d');
