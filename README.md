@@ -43,7 +43,7 @@ You can change downloading data with key, dot-notation-key, null, callback(s) as
 
     $users = \App\User::get();
     $options = [
-        'renders' => [
+        'render' => [
             'id', // $user->id
             'company.name', // $user->company->name
             null, // skipping column
